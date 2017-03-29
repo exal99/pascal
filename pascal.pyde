@@ -8,10 +8,13 @@ rotX, rotY, rotZ = 0, 0, 0
 
 tri = None
 
-box_size = 100
+
+unitLength = 100
+
+pan_move = (0,0)
 
 def setup():
-    global tri
+    global tri, cam
     size(800, 600, P3D)
     cam = PeasyCam(this, 100)
     cam.setMinimumDistance(50)
@@ -25,14 +28,12 @@ def draw():
     background(0)
     fill(255, 0,0)
     strokeWeight(5)
-    point(0,0,0)
-    #makeGrid(10,10,10)
-    #drawPlane(0, 0, 0, getPlaneAt(5))
     drawTetrahedron(0,0,0, tri)
-    #cubeText(0,0,0, "1")
+    cam.pan(*pan_move)
+    #noLoop()
     
 def keyPressed():
-    global tri
+    global tri, pan_move
     if key == "+":
         if len(tri) == 0:
             tri = [[[1]]]
@@ -41,9 +42,22 @@ def keyPressed():
     if key == "-":
         tri = tri[:-1]
     
-def cubeText(x,y,z, t):
+    pan_speed = 5
+    if key == "w":
+        pan_move = (0, -pan_speed)
+    if key == "a":
+        pan_move = (-pan_speed, 0)
+    if key == "s":
+        pan_move = (0, pan_speed)
+    if key == "d":
+        pan_move = (pan_speed, 0)
 
+def keyReleased():
+    global pan_move
+    if key in ("w", "a", "s", "d"):
+        pan_move = (0,0)
     
+def cubeText(x,y,z, t):
     debug = False
     textAlign(CENTER)
     rectMode(CENTER)
@@ -57,42 +71,20 @@ def cubeText(x,y,z, t):
         strokeWeight(10)
         point(0,0,0)
         popMatrix()
-        """
-        stroke(255,0,0)
-        strokeWeight(10)
-        line(-10, 0, 0, 10, 0, 0)
-        stroke(0,255,0)
-        line(0,-10,0,0,10,0)
-        """
     pushMatrix()
     translate(x, y, z)
+    orientation = cam.getRotations() if cam else (0,0,0)
+    rotateX(orientation[0])
+    rotateY(orientation[1])
+    rotateZ(orientation[2])
     fill(255)
     text(t, 0,0)
     popMatrix()
-    """
-    for ind, pos in enumerate(((x, y-box_size/2), (x + box_size/2, y), (x, y + box_size/2), (x - box_size/2, y))):
-        pushMatrix()
-        translate(pos[0],pos[1], z)
-        rotateZ(ind * PI/2)
-        rotateX(PI/2)
-        text(t, 0, 0)
-        popMatrix()
-    pushMatrix()
-    translate(x, y, z-box_size/2)
-    rotateZ(PI)
-    text(t, 0, 0)
-    popMatrix()
-    pushMatrix()
-    translate(x, y, z+box_size/2)
-    rotateZ(PI)
-    text(t, 0, 0)
-    popMatrix()
-    """
     
     
 def drawTetrahedron(x,y,z, tetrahedron):
     for plane_z, plane in enumerate(tetrahedron):
-        drawPlane(x, y, plane_z * box_size + z, plane)
+        drawPlane(x, y, plane_z * unitLength * sqrt(3)/2 + z, plane)
 
 def good_range(beginning, s, step):
     a = beginning
@@ -101,20 +93,17 @@ def good_range(beginning, s, step):
         a += step
 
 def drawPlane(x,y,z, plane):
-    unitLength = 50
     sideLength = sqrt(2 * len(plane)/sqrt(3)) * unitLength
     #row, col = 0,0
-    print(plane)
-    print(x, y, z)
-    y_start = y + (sqrt(3)/2 - 1/sqrt(3)) * sideLength
-    
+    y_start = y - (sqrt(3)/2 - 1/sqrt(3)) * sideLength * len(plane) / 2 if len(plane) != 1 else 0
+    #print(plane)
     for row, cell_y in enumerate(good_range(y_start, y_start + sqrt(3)/2 * unitLength * len(plane), sqrt(3)/2 * unitLength)):
-        print(x - 0.5 * row * unitLength, unitLength * len(plane[row]), unitLength)
-        for col, cell_x in enumerate(good_range(x - 0.5 * row * unitLength, unitLength * len(plane[row]), unitLength)):
+        x_start = x - 0.5 * row * unitLength
+        for col, cell_x in enumerate(good_range(x_start, unitLength * len(plane[row]) + x_start, unitLength)):
             pushMatrix()
             translate(cell_x, cell_y, z)
             textSize(32)
-            print(row, col, cell_x, cell_y)
+            #print(cell_x, cell_y)
             cubeText(0, 0, 0, plane[row][col])
             popMatrix()
 
