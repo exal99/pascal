@@ -94,13 +94,28 @@ def drawTetrahedron(x,y,z, tetrahedron):
     for plane_z, plane in enumerate(tetrahedron):
         drawPlane(x, y, plane_z * box_size + z, plane)
 
+def good_range(beginning, s, step):
+    a = beginning
+    while a < s:
+        yield a
+        a += step
+
 def drawPlane(x,y,z, plane):
-    for cell_y, row in enumerate(plane[::-1]):
-        for cell_x, cell in enumerate(row):
+    unitLength = 50
+    sideLength = sqrt(2 * len(plane)/sqrt(3)) * unitLength
+    #row, col = 0,0
+    print(plane)
+    print(x, y, z)
+    y_start = y + (sqrt(3)/2 - 1/sqrt(3)) * sideLength
+    
+    for row, cell_y in enumerate(good_range(y_start, y_start + sqrt(3)/2 * unitLength * len(plane), sqrt(3)/2 * unitLength)):
+        print(x - 0.5 * row * unitLength, unitLength * len(plane[row]), unitLength)
+        for col, cell_x in enumerate(good_range(x - 0.5 * row * unitLength, unitLength * len(plane[row]), unitLength)):
             pushMatrix()
-            translate(cell_x * box_size + x, cell_y * box_size + y, z)
+            translate(cell_x, cell_y, z)
             textSize(32)
-            cubeText(0, 0, 0, str(cell).rjust(1))
+            print(row, col, cell_x, cell_y)
+            cubeText(0, 0, 0, plane[row][col])
             popMatrix()
 
 def makeGrid(w, h, d):
